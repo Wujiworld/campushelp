@@ -1,0 +1,40 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: campus-help-order
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/campus_help?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:233615}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema-order.sql
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    # 打到控制台，便于你在 IDEA 里观察 SQL 与执行情况
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    com.campushelp: INFO
+    com.baomidou.mybatisplus: DEBUG
+    org.springframework.web: INFO
+
+# 订单主链路：支付超时（分钟）、超时扫描间隔（毫秒，定时任务）
+campus:
+  order:
+    pay-timeout-minutes: 15
+    expire-scan-ms: 30000
+

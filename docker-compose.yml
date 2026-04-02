@@ -1,0 +1,21 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: campus-help-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: campus_help
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+08:00
+    volumes:
+      - campus_help_mysql_data:/var/lib/mysql
+
+volumes:
+  campus_help_mysql_data:
+

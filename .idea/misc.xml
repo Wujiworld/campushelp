@@ -1,0 +1,23 @@
+<project version="4">
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$PROJECT_DIR$/campus-help-social/pom.xml" />
+        <option value="$PROJECT_DIR$/campus-help-product/pom.xml" />
+        <option value="$PROJECT_DIR$/campus-help-activity/pom.xml" />
+        <option value="$PROJECT_DIR$/campus-help-user/pom.xml" />
+        <option value="$PROJECT_DIR$/campus-help-order/pom.xml" />
+        <option value="$PROJECT_DIR$/campus-help-common/pom.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="PWA">
+    <option name="enabled" value="true" />
+    <option name="wasEnabledAtLeastOnce" value="true" />
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="23" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/out" />
+  </component>
+</project>

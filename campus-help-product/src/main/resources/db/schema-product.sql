@@ -1,0 +1,39 @@
+-- V1 最小门店/商品/SKU（支持本地 H2 + MySQL 演示）
+
+CREATE TABLE IF NOT EXISTS ch_store (
+  id               BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+  merchant_user_id BIGINT UNSIGNED NOT NULL,
+  campus_id        BIGINT UNSIGNED NOT NULL,
+  name             VARCHAR(64) NOT NULL,
+  type             TINYINT NOT NULL DEFAULT 1,
+  status           TINYINT NOT NULL DEFAULT 1,
+  open_time        VARCHAR(16) NULL,
+  close_time       VARCHAR(16) NULL,
+  notice           VARCHAR(255) NULL,
+  created_at       DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at       DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='门店/档口';
+
+CREATE TABLE IF NOT EXISTS ch_product (
+  id               BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+  store_id         BIGINT UNSIGNED NOT NULL,
+  name             VARCHAR(64) NOT NULL,
+  cover_url        VARCHAR(255) NULL,
+  category         VARCHAR(32) NULL,
+  status           TINYINT NOT NULL DEFAULT 1,
+  created_at       DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at       DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品SPU';
+
+CREATE TABLE IF NOT EXISTS ch_product_sku (
+  id               BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+  product_id       BIGINT UNSIGNED NOT NULL,
+  sku_name         VARCHAR(64) NULL,
+  price_cent       INT UNSIGNED NOT NULL,
+  stock            INT UNSIGNED NOT NULL DEFAULT 0,
+  sold_count       INT UNSIGNED NOT NULL DEFAULT 0,
+  status           TINYINT NOT NULL DEFAULT 1,
+  created_at       DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  updated_at       DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='商品SKU';
+
