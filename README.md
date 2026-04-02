@@ -1,4 +1,4 @@
-## campus-help（校园帮）| 第一步跑起来
+## campus-help（校园帮）
 
 ### 1) 启动 MySQL（推荐：Docker）
 
