@@ -1,0 +1,9 @@
+package com.campushelp.common.cache;
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@EnableConfigurationProperties(CampusCacheProperties.class)
+public class CacheAutoConfiguration {
+}

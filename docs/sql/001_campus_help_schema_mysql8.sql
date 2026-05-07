@@ -484,4 +484,14 @@ CREATE TABLE IF NOT EXISTS ch_idempotency_record (
   KEY idx_idem_user (user_id, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='幂等记录（可选，通常用Redis即可）';
 
+CREATE TABLE IF NOT EXISTS ch_outbox (
+  id            BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+  event_id      VARCHAR(64) NOT NULL COMMENT 'DomainEvent 幂等键',
+  payload_json  TEXT NOT NULL,
+  created_at    DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  published_at  DATETIME(3) NULL,
+  UNIQUE KEY uk_outbox_event_id (event_id),
+  KEY idx_outbox_pending (published_at, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='领域事件 Outbox';
+
 SET FOREIGN_KEY_CHECKS = 1;

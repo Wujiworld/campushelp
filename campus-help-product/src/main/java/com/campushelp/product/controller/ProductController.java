@@ -26,7 +26,7 @@ public class ProductController {
         this.skuMapper = skuMapper;
     }
 
-    @GetMapping("/api/stores")
+    @GetMapping("/api/v3/stores")
     public List<ChStore> stores(@RequestParam("campusId") Long campusId) {
         return storeMapper.selectList(
                 new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<ChStore>()
@@ -35,7 +35,7 @@ public class ProductController {
         );
     }
 
-    @GetMapping("/api/stores/{storeId}/products")
+    @GetMapping("/api/v3/stores/{storeId}/products")
     public List<ChProduct> products(@PathVariable("storeId") Long storeId) {
         return productMapper.selectList(
                 new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<ChProduct>()
@@ -44,7 +44,7 @@ public class ProductController {
         );
     }
 
-    @GetMapping("/api/products/{productId}/skus")
+    @GetMapping("/api/v3/products/{productId}/skus")
     public List<ChProductSku> skus(@PathVariable("productId") Long productId) {
         return skuMapper.selectList(
                 new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<ChProductSku>()

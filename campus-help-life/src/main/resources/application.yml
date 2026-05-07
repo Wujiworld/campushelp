@@ -1,0 +1,67 @@
+server:
+  port: ${LIFE_SERVICE_PORT:8085}
+
+spring:
+  application:
+    name: campus-help-life
+  cloud:
+    nacos:
+      discovery:
+        enabled: ${NACOS_ENABLED:false}
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/campus_help?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:233615}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: ${REDIS_HOST:127.0.0.1}
+    port: ${REDIS_PORT:6379}
+    database: ${REDIS_DB:0}
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:127.0.0.1}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+    virtual-host: ${SPRING_RABBITMQ_VIRTUAL_HOST:/}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        default-requeue-rejected: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+
+campus:
+  jwt:
+    secret: ${JWT_SECRET:campus-help-jwt-dev-only-change-in-prod-use-env-JWT_SECRET-64chars-minimum-for-hs512!!}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+  seckill:
+    enabled: ${CAMPUS_SECKILL_ENABLED:false}
+  mq:
+    order-delay:
+      enabled: ${CAMPUS_MQ_ORDER_DELAY_ENABLED:false}
+  outbox:
+    enabled: ${CAMPUS_OUTBOX_ENABLED:true}
+    publish-ms: ${CAMPUS_OUTBOX_PUBLISH_MS:1000}
+  feed:
+    timeline-prefix: ${CAMPUS_FEED_TIMELINE_PREFIX:feed:timeline:}
+    author-posts-prefix: ${CAMPUS_FEED_AUTHOR_POSTS_PREFIX:feed:author:posts:}
+    author-profile-prefix: ${CAMPUS_FEED_AUTHOR_PROFILE_PREFIX:feed:author:profile:}
+    timeline-max-size: ${CAMPUS_FEED_TIMELINE_MAX_SIZE:1000}
+    push-follower-threshold: ${CAMPUS_FEED_PUSH_FOLLOWER_THRESHOLD:2000}
+    hot-shard-count: ${CAMPUS_FEED_HOT_SHARD_COUNT:8}
+    page-size-max: ${CAMPUS_FEED_PAGE_SIZE_MAX:50}
+  search:
+    provider: ${CAMPUS_SEARCH_PROVIDER:db}

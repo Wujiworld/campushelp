@@ -1,0 +1,68 @@
+# =============================================================================
+# 校园帮 · 单体运行配置（唯一入口 campus-help-server）
+# =============================================================================
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: campus-help
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  cloud:
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}
+        port: ${SENTINEL_TRANSPORT_PORT:8719}
+  config:
+    import:
+      - classpath:config/db.yml
+      - classpath:config/redis.yml
+      - classpath:config/jwt.yml
+      - classpath:config/cors.yml
+      - classpath:config/oss.yml
+      - classpath:config/rabbitmq.yml
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    com.campushelp: INFO
+    com.baomidou.mybatisplus: DEBUG
+    org.springframework.web: INFO
+
+campus:
+  ratelimit:
+    window-mode: ${CAMPUS_RATELIMIT_WINDOW:sliding}
+  payment:
+    mock-secret: ${CAMPUS_PAYMENT_MOCK_SECRET:}
+    callback-lock-ttl-seconds: ${PAY_CALLBACK_LOCK_TTL:0}
+    reconcile-cron: ${PAY_RECONCILE_CRON:0 0 * * * ?}
+  auth:
+    merchant-register-invite: ${CAMPUS_AUTH_MERCHANT_INVITE:}
+  order:
+    pay-timeout-minutes: ${ORDER_PAY_TIMEOUT_MINUTES:15}
+    expire-scan-ms: ${ORDER_EXPIRE_SCAN_MS:30000}
+  seckill:
+    enabled: ${CAMPUS_SECKILL_ENABLED:false}
+  mq:
+    order-delay:
+      enabled: ${CAMPUS_MQ_ORDER_DELAY_ENABLED:false}
+  outbox:
+    enabled: ${CAMPUS_OUTBOX_ENABLED:true}
+    publish-ms: ${CAMPUS_OUTBOX_PUBLISH_MS:1000}
+  api-signature:
+    enabled: ${CAMPUS_API_SIGNATURE_ENABLED:false}
+    secret: ${CAMPUS_API_SIGN_SECRET:}
+    max-skew-seconds: ${CAMPUS_API_SIGN_MAX_SKEW:300}
+    path-prefixes: ${CAMPUS_API_SIGN_PATHS:/api/v3/payments/mock-callback}
+

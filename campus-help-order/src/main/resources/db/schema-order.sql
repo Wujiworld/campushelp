@@ -44,3 +44,13 @@ CREATE TABLE IF NOT EXISTS ch_order_item (
   KEY idx_oi_order (order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='订单明细';
 
+CREATE TABLE IF NOT EXISTS ch_outbox (
+  id            BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+  event_id      VARCHAR(64) NOT NULL COMMENT 'DomainEvent 幂等键',
+  payload_json  TEXT NOT NULL,
+  created_at    DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  published_at  DATETIME(3) NULL,
+  UNIQUE KEY uk_outbox_event_id (event_id),
+  KEY idx_outbox_pending (published_at, id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='领域事件 Outbox';
+

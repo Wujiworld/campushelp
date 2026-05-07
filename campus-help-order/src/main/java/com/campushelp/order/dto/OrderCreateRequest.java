@@ -10,12 +10,14 @@ import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
- * 创建订单请求（主链路演示：暂未接登录，userId 由调用方显式传入）。
+ * 创建订单请求。
+ * <p>
+ * V2：{@code userId} 不必传，由服务端从 JWT 注入；若传入则以 Token 中用户为准（防伪造）。
  */
 @Data
 public class OrderCreateRequest {
 
-    @NotNull
+    /** 兼容旧客户端；实际以登录用户为准 */
     private Long userId;
 
     @NotBlank

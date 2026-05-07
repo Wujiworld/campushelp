@@ -1,0 +1,8 @@
+logging:
+  level:
+    root: WARN
+    com.campushelp: INFO
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl

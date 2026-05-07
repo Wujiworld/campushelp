@@ -1,0 +1,59 @@
+# =============================================================================
+# 校园帮 · API Gateway（微服务入口）
+# 统一无前缀路由：/api/v3/**
+# =============================================================================
+server:
+  port: ${GATEWAY_PORT:8081}
+
+spring:
+  application:
+    name: campus-help-gateway
+  redis:
+    host: ${REDIS_HOST:127.0.0.1}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+  cloud:
+    nacos:
+      discovery:
+        enabled: ${NACOS_ENABLED:false}
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}
+        port: ${GATEWAY_SENTINEL_TRANSPORT_PORT:8720}
+      eager: true
+    gateway:
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: ${GATEWAY_RL_REPLENISH:200}
+            redis-rate-limiter.burstCapacity: ${GATEWAY_RL_BURST:400}
+            key-resolver: "#{@ipKeyResolver}"
+      routes:
+        - id: user-service
+          uri: ${GATEWAY_USER_URI:http://127.0.0.1:8082}
+          predicates:
+            - Path=/api/v3/auth/**,/api/v3/users/**,/api/v3/addresses/**
+        - id: order-service
+          uri: ${GATEWAY_ORDER_URI:http://127.0.0.1:8083}
+          predicates:
+            - Path=/api/v3/orders/**,/api/v3/payments/**,/api/v3/finance/**,/api/v3/merchant/refunds/**,/api/v3/admin/system/**,/api/v3/admin/refunds/**,/api/v3/admin/finance/**
+        - id: product-service
+          uri: ${GATEWAY_PRODUCT_URI:http://127.0.0.1:8084}
+          predicates:
+            - Path=/api/v3/stores/**,/api/v3/products/**,/api/v3/campuses/**
+        - id: life-service
+          uri: ${GATEWAY_LIFE_URI:http://127.0.0.1:8085}
+          predicates:
+            - Path=/api/v3/activities/**,/api/v3/agent/**,/api/v3/secondhand/**,/api/v3/market/**,/api/v3/comments/**,/api/v3/errands/**,/api/v3/messages/**,/api/v3/seckill/**,/api/v3/follows/**,/api/v3/likes/**,/api/v3/profile/**,/api/v3/feed/**,/api/v3/admin/content/**,/api/v3/admin/activities/**,/api/v3/admin/comments/**,/api/v3/admin/agent/**,/api/v3/admin/messages/**
+        # 兜底：admin 用户管理相关
+        - id: user-admin-fallback
+          uri: ${GATEWAY_USER_URI:http://127.0.0.1:8082}
+          predicates:
+            - Path=/api/v3/admin/users/**,/api/v3/admin/role-applications/**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

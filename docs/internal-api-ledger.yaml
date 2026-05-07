@@ -1,0 +1,480 @@
+version: "1.0"
+updated_at: "2026-04-29T21:24:00+08:00"
+scope: "life -> order/product internal APIs"
+conventions:
+  timeout_unit: "ms"
+  sla_unit: "p95 latency ms"
+  idempotent_values: ["yes", "conditional", "no"]
+  auth_levels:
+    - "internal_token_required"
+    - "service_mesh_mtls"
+    - "gateway_block_external"
+
+apis:
+  - method: POST
+    path: /api/v3/internal/orders/agent/purchase
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: no
+    timeout: 800
+    SLA: 300
+
+  - method: POST
+    path: /api/v3/internal/orders/errand
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: no
+    timeout: 800
+    SLA: 300
+
+  - method: POST
+    path: /api/v3/internal/orders/secondhand/purchase
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: no
+    timeout: 800
+    SLA: 300
+
+  - method: POST
+    path: /api/v3/internal/orders/ticket
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: no
+    timeout: 800
+    SLA: 300
+
+  - method: POST
+    path: /api/v3/internal/orders/{orderId}/close-unpaid
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 500
+    SLA: 250
+
+  - method: GET
+    path: /api/v3/internal/life/activities
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 500
+    SLA: 200
+
+  - method: GET
+    path: /api/v3/internal/life/activities/{id}
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 400
+    SLA: 150
+
+  - method: GET
+    path: /api/v3/internal/life/activities/batch
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 700
+    SLA: 280
+
+  - method: POST
+    path: /api/v3/internal/life/activities
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: no
+    timeout: 700
+    SLA: 280
+
+  - method: GET
+    path: /api/v3/internal/life/activities/{id}/tickets
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 500
+    SLA: 200
+
+  - method: GET
+    path: /api/v3/internal/life/tickets/{id}
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 400
+    SLA: 150
+
+  - method: GET
+    path: /api/v3/internal/life/tickets
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 700
+    SLA: 280
+
+  - method: POST
+    path: /api/v3/internal/life/tickets/{id}/release
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 500
+    SLA: 220
+
+  - method: POST
+    path: /api/v3/internal/life/activities/{id}/tickets
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: no
+    timeout: 700
+    SLA: 280
+
+  - method: GET
+    path: /api/v3/internal/life/comments
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 600
+    SLA: 250
+
+  - method: GET
+    path: /api/v3/internal/life/comments/mine
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 600
+    SLA: 250
+
+  - method: GET
+    path: /api/v3/internal/life/comments/{id}
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 400
+    SLA: 160
+
+  - method: POST
+    path: /api/v3/internal/life/comments
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: no
+    timeout: 700
+    SLA: 300
+
+  - method: POST
+    path: /api/v3/internal/life/comments/{id}/status
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 500
+    SLA: 220
+
+  - method: POST
+    path: /api/v3/internal/life/comments/{id}/delete
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 500
+    SLA: 220
+
+  - method: GET
+    path: /api/v3/internal/life/agent/items
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 500
+    SLA: 220
+
+  - method: GET
+    path: /api/v3/internal/life/agent/items/{id}
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 400
+    SLA: 160
+
+  - method: POST
+    path: /api/v3/internal/life/agent/items
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: no
+    timeout: 700
+    SLA: 280
+
+  - method: POST
+    path: /api/v3/internal/life/agent/items/{id}/offline
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 500
+    SLA: 220
+
+  - method: POST
+    path: /api/v3/internal/life/agent/items/{id}/restore
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 500
+    SLA: 220
+
+  - method: GET
+    path: /api/v3/internal/life/orders/{orderId}/agent-line
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 400
+    SLA: 160
+
+  - method: GET
+    path: /api/v3/internal/life/secondhand/items
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 700
+    SLA: 280
+
+  - method: GET
+    path: /api/v3/internal/life/secondhand/items/{id}
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 400
+    SLA: 160
+
+  - method: GET
+    path: /api/v3/internal/life/secondhand/items/{id}/images
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 500
+    SLA: 220
+
+  - method: GET
+    path: /api/v3/internal/life/secondhand/seller/{sellerUserId}/items
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 600
+    SLA: 250
+
+  - method: POST
+    path: /api/v3/internal/life/secondhand/items
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: no
+    timeout: 800
+    SLA: 320
+
+  - method: POST
+    path: /api/v3/internal/life/secondhand/items/{id}/images
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: no
+    timeout: 600
+    SLA: 250
+
+  - method: POST
+    path: /api/v3/internal/life/secondhand/items/{id}/offline
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 500
+    SLA: 220
+
+  - method: POST
+    path: /api/v3/internal/life/secondhand/items/{id}/view
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: no
+    timeout: 300
+    SLA: 120
+
+  - method: POST
+    path: /api/v3/internal/life/secondhand/items/{id}/status
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 500
+    SLA: 220
+
+  - method: GET
+    path: /api/v3/internal/life/likes/state
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 400
+    SLA: 160
+
+  - method: POST
+    path: /api/v3/internal/life/likes/toggle
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 500
+    SLA: 220
+
+  - method: GET
+    path: /api/v3/internal/life/likes/ids
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 500
+    SLA: 220
+
+  - method: GET
+    path: /api/v3/internal/life/likes/targets/{targetType}/{targetId}
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 400
+    SLA: 160
+
+  - method: GET
+    path: /api/v3/internal/life/messages/inbox
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 700
+    SLA: 280
+
+  - method: POST
+    path: /api/v3/internal/life/messages/read
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 500
+    SLA: 220
+
+  - method: POST
+    path: /api/v3/internal/life/messages/upsert
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 700
+    SLA: 300
+
+  - method: GET
+    path: /api/v3/internal/life/profile/stats
+    owner: order
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 500
+    SLA: 220
+
+  - method: GET
+    path: /api/v3/internal/products/stores/{id}
+    owner: product
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 400
+    SLA: 160
+
+  - method: GET
+    path: /api/v3/internal/products/{id}
+    owner: product
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 400
+    SLA: 160
+
+  - method: GET
+    path: /api/v3/internal/products/skus/{id}
+    owner: product
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 400
+    SLA: 160
+
+  - method: GET
+    path: /api/v3/internal/products/skus
+    owner: product
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 600
+    SLA: 250
+
+  - method: GET
+    path: /api/v3/internal/products/batch
+    owner: product
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 700
+    SLA: 280
+
+  - method: GET
+    path: /api/v3/internal/products/stores/batch
+    owner: product
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: yes
+    timeout: 700
+    SLA: 280
+
+  - method: POST
+    path: /api/v3/internal/products/skus
+    owner: product
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: no
+    timeout: 700
+    SLA: 280
+
+  - method: PUT
+    path: /api/v3/internal/products/skus/{id}
+    owner: product
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 600
+    SLA: 250
+
+  - method: POST
+    path: /api/v3/internal/products/skus/{id}/status
+    owner: product
+    caller: life
+    auth: "internal_token_required + gateway_block_external"
+    idempotent: conditional
+    timeout: 500
+    SLA: 220

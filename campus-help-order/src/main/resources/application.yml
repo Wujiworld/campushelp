@@ -1,18 +1,23 @@
 server:
-  port: 8081
+  port: ${ORDER_SERVICE_PORT:8083}
 
 spring:
   application:
     name: campus-help-order
+  cloud:
+    nacos:
+      discovery:
+        enabled: ${NACOS_ENABLED:false}
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/campus_help?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/campus_help?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:233615}
     driver-class-name: com.mysql.cj.jdbc.Driver
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:db/schema-order.sql
+  redis:
+    host: ${REDIS_HOST:127.0.0.1}
+    port: ${REDIS_PORT:6379}
+    database: ${REDIS_DB:0}
 
 management:
   endpoints:
@@ -23,18 +28,16 @@ management:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    # 打到控制台，便于你在 IDEA 里观察 SQL 与执行情况
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-logging:
-  level:
-    com.campushelp: INFO
-    com.baomidou.mybatisplus: DEBUG
-    org.springframework.web: INFO
-
-# 订单主链路：支付超时（分钟）、超时扫描间隔（毫秒，定时任务）
 campus:
+  jwt:
+    secret: ${JWT_SECRET:campus-help-jwt-dev-only-change-in-prod-use-env-JWT_SECRET-64chars-minimum-for-hs512!!}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
   order:
-    pay-timeout-minutes: 15
-    expire-scan-ms: 30000
-
+    pay-timeout-minutes: ${ORDER_PAY_TIMEOUT_MINUTES:15}
+    expire-scan-ms: ${ORDER_EXPIRE_SCAN_MS:30000}
+product:
+  service:
+    base-url: ${PRODUCT_SERVICE_BASE_URL:http://127.0.0.1:8084}

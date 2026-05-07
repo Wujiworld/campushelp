@@ -1,0 +1,14 @@
+# 阿里云 OSS：预签名直传。生产用环境变量注入密钥，勿提交明文。
+campus:
+  oss:
+    enabled: ${OSS_ENABLED:false}
+    endpoint: ${OSS_ENDPOINT:}
+    access-key-id: ${OSS_ACCESS_KEY_ID:}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET:}
+    bucket: ${OSS_BUCKET:}
+    # 对象键前缀，如 campus-help/dev/
+    prefix: ${OSS_PREFIX:campus-help/dev/}
+    # PUT 预签名有效期（秒）
+    expire-seconds: ${OSS_PRESIGN_EXPIRE_SECONDS:600}
+    # 对外访问基址（若 bucket 为公共读，一般为 https://{bucket}.{endpoint-host}/ 或自定义域名）
+    public-base-url: ${OSS_PUBLIC_BASE_URL:}
