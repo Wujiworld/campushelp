@@ -1,6 +1,9 @@
 package com.campushelp.order.controller;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.campushelp.common.exception.BusinessException;
 import com.campushelp.common.security.RequireRole;
 import com.campushelp.common.security.RoleEnum;
 import com.campushelp.common.security.SecurityContextUtils;
@@ -72,6 +75,7 @@ public class OrderController {
     }
 
     @PostMapping("/api/v3/orders")
+    @SentinelResource(value = "createOrder", blockHandler = "orderBlocked")
     public ChOrder create(@Valid @RequestBody OrderCreateRequest req) {
         Long uid = SecurityContextUtils.requireUserId();
         req.setUserId(uid);

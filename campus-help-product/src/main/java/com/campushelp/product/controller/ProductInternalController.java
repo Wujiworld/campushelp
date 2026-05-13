@@ -2,6 +2,7 @@ package com.campushelp.product.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.campushelp.common.cache.CacheFacade;
 import com.campushelp.product.entity.ChProduct;
 import com.campushelp.product.entity.ChProductSku;
 import com.campushelp.product.entity.ChStore;
@@ -25,26 +26,32 @@ public class ProductInternalController {
     private final ChStoreMapper storeMapper;
     private final ChProductMapper productMapper;
     private final ChProductSkuMapper skuMapper;
+    private final CacheFacade cacheFacade;
 
-    public ProductInternalController(ChStoreMapper storeMapper, ChProductMapper productMapper, ChProductSkuMapper skuMapper) {
+    public ProductInternalController(ChStoreMapper storeMapper, ChProductMapper productMapper,
+                                     ChProductSkuMapper skuMapper, CacheFacade cacheFacade) {
         this.storeMapper = storeMapper;
         this.productMapper = productMapper;
         this.skuMapper = skuMapper;
+        this.cacheFacade = cacheFacade;
     }
 
     @GetMapping("/api/v3/internal/products/stores/{id}")
     public ChStore getStore(@PathVariable("id") Long id) {
-        return storeMapper.selectById(id);
+        return cacheFacade.getOrLoad("store:" + id, ChStore.class,
+                () -> storeMapper.selectById(id));
     }
 
     @GetMapping("/api/v3/internal/products/{id}")
     public ChProduct getProduct(@PathVariable("id") Long id) {
-        return productMapper.selectById(id);
+        return cacheFacade.getOrLoad("product:" + id, ChProduct.class,
+                () -> productMapper.selectById(id));
     }
 
     @GetMapping("/api/v3/internal/products/skus/{id}")
     public ChProductSku getSku(@PathVariable("id") Long id) {
-        return skuMapper.selectById(id);
+        return cacheFacade.getOrLoad("sku:" + id, ChProductSku.class,
+                () -> skuMapper.selectById(id));
     }
 
     @GetMapping("/api/v3/internal/products/skus")
@@ -89,6 +96,7 @@ public class ProductInternalController {
         sku.setCreatedAt(LocalDateTime.now());
         sku.setUpdatedAt(LocalDateTime.now());
         skuMapper.insert(sku);
+        cacheFacade.evict("product:" + productId);
         return sku;
     }
 
@@ -104,6 +112,7 @@ public class ProductInternalController {
         if (stock != null) sku.setStock(stock);
         sku.setUpdatedAt(LocalDateTime.now());
         skuMapper.updateById(sku);
+        cacheFacade.evict("sku:" + id);
         return sku;
     }
 
@@ -114,6 +123,7 @@ public class ProductInternalController {
                 .eq("id", id)
                 .set("status", status)
                 .set("updated_at", LocalDateTime.now()));
+        cacheFacade.evict("sku:" + id);
         return skuMapper.selectById(id);
     }
 
@@ -125,6 +135,7 @@ public class ProductInternalController {
                 .ge("stock", quantity)
                 .setSql("stock = stock - " + quantity)
                 .set("updated_at", LocalDateTime.now()));
+        cacheFacade.evict("sku:" + skuId);
         return rows == 1;
     }
 
@@ -135,6 +146,7 @@ public class ProductInternalController {
                 .eq("id", skuId)
                 .setSql("stock = stock + " + qty)
                 .set("updated_at", LocalDateTime.now()));
+        cacheFacade.evict("sku:" + skuId);
         return rows == 1;
     }
 }

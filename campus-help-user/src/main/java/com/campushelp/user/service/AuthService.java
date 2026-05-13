@@ -1,6 +1,7 @@
 package com.campushelp.user.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.campushelp.common.cache.CacheFacade;
 import com.campushelp.common.security.JwtTokenProvider;
 import com.campushelp.common.security.RoleEnum;
 import com.campushelp.user.dto.LoginRequest;
@@ -40,6 +41,7 @@ public class AuthService {
     private final RoleQueryMapper roleQueryMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final CacheFacade cacheFacade;
 
     @Value("${campus.jwt.expiration-ms:86400000}")
     private long expirationMs;
@@ -53,13 +55,15 @@ public class AuthService {
                        ChRoleApplicationMapper roleApplicationMapper,
                        RoleQueryMapper roleQueryMapper,
                        PasswordEncoder passwordEncoder,
-                       JwtTokenProvider jwtTokenProvider) {
+                       JwtTokenProvider jwtTokenProvider,
+                       CacheFacade cacheFacade) {
         this.userMapper = userMapper;
         this.userRoleMapper = userRoleMapper;
         this.roleApplicationMapper = roleApplicationMapper;
         this.roleQueryMapper = roleQueryMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.cacheFacade = cacheFacade;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -180,19 +184,21 @@ public class AuthService {
      * 当前用户资料（需已登录）。
      */
     public UserProfileVO getProfile(Long userId) {
-        ChUser u = userMapper.selectById(userId);
-        if (u == null) {
-            throw new UserNotFoundException("用户不存在");
-        }
-        List<String> roles = roleQueryMapper.listRoleCodesByUserId(userId);
-        return new UserProfileVO(
-                u.getId(),
-                u.getPhone(),
-                u.getNickname(),
-                roles,
-                u.getAvatarUrl(),
-                u.getCampusId(),
-                u.getCreatedAt());
+        return cacheFacade.getOrLoad("user:profile:" + userId, UserProfileVO.class, () -> {
+            ChUser u = userMapper.selectById(userId);
+            if (u == null) {
+                throw new UserNotFoundException("用户不存在");
+            }
+            List<String> roles = roleQueryMapper.listRoleCodesByUserId(userId);
+            return new UserProfileVO(
+                    u.getId(),
+                    u.getPhone(),
+                    u.getNickname(),
+                    roles,
+                    u.getAvatarUrl(),
+                    u.getCampusId(),
+                    u.getCreatedAt());
+        });
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -213,6 +219,7 @@ public class AuthService {
         }
         u.setUpdatedAt(LocalDateTime.now());
         userMapper.updateById(u);
+        cacheFacade.evict("user:profile:" + userId);
         return getProfile(userId);
     }
 

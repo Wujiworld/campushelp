@@ -1,40 +1,47 @@
-## 使用方式（MySQL 8）
+# 数据库脚本说明
 
-在 MySQL 客户端执行（或 Navicat / Workbench 导入）。应用默认 **`spring.sql.init.mode=never`**，不会在每次启动时自动执行脚本。
+## 环境
 
-### 推荐顺序（可上线全量数据）
+- MySQL 8.0+
+- 数据库：`campus_help`
+- 字符集：`utf8mb4` / `utf8mb4_0900_ai_ci`
 
-1. **建表**  
-   `001_campus_help_schema_mysql8.sql`
+## 执行方式
 
-2. **基础数据（角色、权限等）**  
-   `002_campus_help_seed_basic.sql`
+在 MySQL 客户端执行（或 Navicat / Workbench 导入）。
 
-3. **全量业务种子（校区、用户、门店、商品、SKU、示例订单）**  
-   `005_campus_help_full_production_seed.sql`
+应用默认 `spring.sql.init.mode=never`，不会在每次启动时自动执行脚本。建议首次部署手动执行，后续通过应用自身的种子机制管理。
 
-4. **（可选）二手与活动抢票演示数据**  
-   `006_campus_help_life_seed.sql`
+## 推荐执行顺序
 
-5. **统一市场、代购、评论与支付幂等**  
-   `007_campus_help_market_agent_comment.sql`（`ch_agent_item`、`ch_comment`、`ch_payment_notify`）
+| 顺序 | 脚本 | 说明 |
+| --- | --- | --- |
+| 1 | `001_campus_help_schema_mysql8.sql` | 建表（全部业务表） |
+| 2 | `002_campus_help_seed_basic.sql` | 基础数据（角色、权限等） |
+| 3 | `005_campus_help_full_production_seed.sql` | 全量业务种子（校区、用户、门店、商品、SKU、示例订单） |
+| 4 | `006_campus_help_life_seed.sql` | （可选）二手与活动抢票演示数据 |
+| 5 | `007_campus_help_market_agent_comment.sql` | （可选）代购、评论、支付幂等 |
+| 6 | `008_campus_help_like_profile.sql` | （可选）点赞、浏览量、地址与资料扩展 |
+| 7 | `009_campus_help_notification_message.sql` | （可选）站内信/通知 |
+| 8 | `009_ch_outbox.sql` | （可选）Outbox 模式事务消息表 |
+| 9 | `010_campus_help_gap_fullfill.sql` | （可选）补充遗漏的索引/字段 |
 
-6. **站内信 / 通知（消息落库）**  
-   `009_campus_help_notification_message.sql`（`ch_message`、`ch_message_recipient`）
+## 测试账号
 
-7. **点赞、浏览量、地址与资料扩展**  
-   `008_campus_help_like_profile.sql`（`ch_like`、`like_count` / `view_count` 等；需在对应业务库执行）
+测试账号密码均为 **`123456`**（BCrypt 加密，与 Spring `BCryptPasswordEncoder` 一致）。详见 `005` 脚本内注释。
 
-> 测试账号密码均为 **`123456`**（BCrypt，与 Spring `BCryptPasswordEncoder` 一致）。详见 `005` 脚本内注释。
+## 设计说明
+
+### 统一订单
+- `ch_order` + `ch_order_item`
+
+### RBAC 权限
+- `ch_user` + `ch_role` + `ch_user_role`
+
+### 门店商品
+- `ch_store`、`ch_product`、`ch_product_sku`
 
 ### 已移除的旧脚本
+- `003` / `004`：已删除，数据由 `005` 统一提供，避免演示脚本与生产种子重复维护。
 
-- `003` / `004`：已删除，数据由 **`005`** 统一提供，避免「演示脚本」与「生产种子」重复维护。
-
-## 设计说明（简版）
-
-更完整的表说明见：`docs/DATABASE_ARCHITECTURE.md`。
-
-- **统一订单**：`ch_order` + `ch_order_item`
-- **RBAC**：`ch_user` + `ch_role` + `ch_user_role`
-- **门店商品**：`ch_store`、`ch_product`、`ch_product_sku`
+> 完整表结构说明见 `docs/CAPABILITIES_IMPLEMENTATION.md`。

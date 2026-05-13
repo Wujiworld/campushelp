@@ -23,12 +23,6 @@ spring:
         port: ${GATEWAY_SENTINEL_TRANSPORT_PORT:8720}
       eager: true
     gateway:
-      default-filters:
-        - name: RequestRateLimiter
-          args:
-            redis-rate-limiter.replenishRate: ${GATEWAY_RL_REPLENISH:200}
-            redis-rate-limiter.burstCapacity: ${GATEWAY_RL_BURST:400}
-            key-resolver: "#{@ipKeyResolver}"
       routes:
         - id: user-service
           uri: ${GATEWAY_USER_URI:http://127.0.0.1:8082}
