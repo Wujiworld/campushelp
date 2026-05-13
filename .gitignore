@@ -9,6 +9,10 @@ PLAN_CURSOR.md
 PLAN_MYSELF.md
 PROJECT_LOG.md
 
+# 编码损坏的冗余文件
+remote_readme.md
+remote_readme_utf8.md
+
 ### IntelliJ IDEA ###
 .idea/modules.xml
 .idea/jarRepositories.xml

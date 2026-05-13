@@ -14,6 +14,28 @@ spring:
       transport:
         dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}
         port: ${SENTINEL_TRANSPORT_PORT:8719}
+      eager: true
+      feign:
+        enabled: ${SENTINEL_FEIGN_ENABLED:true}
+      datasource:
+        flow:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+            data-id: ${spring.application.name}-flow-rules
+            group-id: SENTINEL_GROUP
+            rule-type: flow
+        degrade:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+            data-id: ${spring.application.name}-degrade-rules
+            group-id: SENTINEL_GROUP
+            rule-type: degrade
+        system:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+            data-id: ${spring.application.name}-system-rules
+            group-id: SENTINEL_GROUP
+            rule-type: system
   config:
     import:
       - classpath:config/db.yml

@@ -1,5 +1,6 @@
 package com.campushelp.life.activity.service;
 
+import com.campushelp.common.cache.CacheFacade;
 import com.campushelp.common.exception.ValidationException;
 import com.campushelp.life.client.LifeCatalogClient;
 import com.campushelp.life.client.dto.ActivityDto;
@@ -12,9 +13,11 @@ import java.util.List;
 public class ActivityQueryService {
 
     private final LifeCatalogClient lifeCatalogClient;
+    private final CacheFacade cacheFacade;
 
-    public ActivityQueryService(LifeCatalogClient lifeCatalogClient) {
+    public ActivityQueryService(LifeCatalogClient lifeCatalogClient, CacheFacade cacheFacade) {
         this.lifeCatalogClient = lifeCatalogClient;
+        this.cacheFacade = cacheFacade;
     }
 
     public List<ActivityDto> listPublished(Long campusId) {
@@ -26,7 +29,8 @@ public class ActivityQueryService {
     }
 
     public ActivityDto getPublished(long id) {
-        ActivityDto a = lifeCatalogClient.getActivity(id);
+        ActivityDto a = cacheFacade.getOrLoad("activity:" + id, ActivityDto.class,
+                () -> lifeCatalogClient.getActivity(id));
         if (a == null || !"PUBLISHED".equals(a.getStatus())) {
             throw new ValidationException("活动不存在或未发布");
         }

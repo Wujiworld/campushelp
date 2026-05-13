@@ -10,12 +10,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 @Component
 public class CacheFacade {
     private static final String NULL_MARKER = "__NULL__";
+    private static final int SPIN_RETRIES = 4;
+    private static final long SPIN_INTERVAL_MS = 50;
 
     private final Cache<String, String> localCache;
     private final StringRedisTemplate redisTemplate;
@@ -32,14 +35,19 @@ public class CacheFacade {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         this.properties = properties;
+        // Caffeine TTL 在构建时加入随机偏移，分散本地缓存过期时间
+        long localTtl = properties.getLocalExpireSeconds()
+                + randomJitter(properties.getJitterSeconds());
         this.localCache = Caffeine.newBuilder()
                 .maximumSize(properties.getLocalMaximumSize())
-                .expireAfterWrite(Duration.ofSeconds(properties.getLocalExpireSeconds()))
+                .expireAfterWrite(Duration.ofSeconds(localTtl))
                 .build();
         this.hitLocal = meterRegistry.counter("campus.cache.hit", "layer", "caffeine");
         this.hitRedis = meterRegistry.counter("campus.cache.hit", "layer", "redis");
         this.hitDb = meterRegistry.counter("campus.cache.hit", "layer", "source");
     }
+
+    // ==================== 泛型读接口 ====================
 
     public <T> T getOrLoad(String key, Class<T> type, Supplier<T> loader) {
         String local = localCache.getIfPresent(key);
@@ -53,16 +61,33 @@ public class CacheFacade {
             hitRedis.increment();
             return decode(remote, type);
         }
+        return loadWithMutex(key, type, loader);
+    }
+
+    public String getOrLoadJson(String key, Supplier<String> loader) {
+        String local = localCache.getIfPresent(key);
+        if (local != null) {
+            hitLocal.increment();
+            return NULL_MARKER.equals(local) ? null : local;
+        }
+        String remote = redisTemplate.opsForValue().get(key);
+        if (remote != null) {
+            localCache.put(key, remote);
+            hitRedis.increment();
+            return NULL_MARKER.equals(remote) ? null : remote;
+        }
+        return loadJsonWithMutex(key, loader);
+    }
+
+    // ==================== 互斥重建（防击穿） ====================
+
+    private <T> T loadWithMutex(String key, Class<T> type, Supplier<T> loader) {
         String lockKey = properties.getLockPrefix() + key;
-        boolean locked = Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(lockKey, "1", Duration.ofSeconds(5)));
+        boolean locked = Boolean.TRUE.equals(
+                redisTemplate.opsForValue().setIfAbsent(lockKey, "1", Duration.ofSeconds(5)));
         if (!locked) {
-            String retry = redisTemplate.opsForValue().get(key);
-            if (retry != null) {
-                localCache.put(key, retry);
-                hitRedis.increment();
-                return decode(retry, type);
-            }
-            return null;
+            // 自旋等待：持有锁的线程正在查 DB，最多等 ~200ms
+            return spinWait(key, type);
         }
         try {
             T loaded = loader.get();
@@ -81,28 +106,12 @@ public class CacheFacade {
         }
     }
 
-    public String getOrLoadJson(String key, Supplier<String> loader) {
-        String local = localCache.getIfPresent(key);
-        if (local != null) {
-            hitLocal.increment();
-            return NULL_MARKER.equals(local) ? null : local;
-        }
-        String remote = redisTemplate.opsForValue().get(key);
-        if (remote != null) {
-            localCache.put(key, remote);
-            hitRedis.increment();
-            return NULL_MARKER.equals(remote) ? null : remote;
-        }
+    private String loadJsonWithMutex(String key, Supplier<String> loader) {
         String lockKey = properties.getLockPrefix() + key;
-        boolean locked = Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(lockKey, "1", Duration.ofSeconds(5)));
+        boolean locked = Boolean.TRUE.equals(
+                redisTemplate.opsForValue().setIfAbsent(lockKey, "1", Duration.ofSeconds(5)));
         if (!locked) {
-            String retry = redisTemplate.opsForValue().get(key);
-            if (retry != null) {
-                localCache.put(key, retry);
-                hitRedis.increment();
-                return NULL_MARKER.equals(retry) ? null : retry;
-            }
-            return null;
+            return spinWaitJson(key);
         }
         try {
             String loaded = loader.get();
@@ -118,12 +127,77 @@ public class CacheFacade {
         }
     }
 
+    private <T> T spinWait(String key, Class<T> type) {
+        for (int i = 0; i < SPIN_RETRIES; i++) {
+            try { Thread.sleep(SPIN_INTERVAL_MS); } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); break;
+            }
+            String retry = redisTemplate.opsForValue().get(key);
+            if (retry != null) {
+                localCache.put(key, retry);
+                hitRedis.increment();
+                return decode(retry, type);
+            }
+            // 锁已释放但还没数据 → 加载线程可能失败了，提前退出
+            if (Boolean.FALSE.equals(redisTemplate.hasKey(properties.getLockPrefix() + key))) {
+                break;
+            }
+        }
+        return null;
+    }
+
+    private String spinWaitJson(String key) {
+        for (int i = 0; i < SPIN_RETRIES; i++) {
+            try { Thread.sleep(SPIN_INTERVAL_MS); } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); break;
+            }
+            String retry = redisTemplate.opsForValue().get(key);
+            if (retry != null) {
+                localCache.put(key, retry);
+                hitRedis.increment();
+                return NULL_MARKER.equals(retry) ? null : retry;
+            }
+            if (Boolean.FALSE.equals(redisTemplate.hasKey(properties.getLockPrefix() + key))) {
+                break;
+            }
+        }
+        return null;
+    }
+
+    // ==================== 主动失效 ====================
+
+    /**
+     * 失效单个缓存键（本地 + Redis）。
+     */
+    public void evict(String key) {
+        if (key == null) return;
+        localCache.invalidate(key);
+        redisTemplate.delete(key);
+    }
+
+    /**
+     * 按前缀批量失效 Redis 缓存键（本地缓存靠 TTL 自然过期）。
+     */
+    public void evictByPrefix(String prefix) {
+        if (prefix == null) return;
+        Set<String> keys = redisTemplate.keys(prefix + "*");
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
+    }
+
+    // ==================== 写入（防雪崩 + 防穿透） ====================
+
     private void store(String key, String value, long ttlSeconds) {
-        long jitter = properties.getJitterSeconds() <= 0
-                ? 0
-                : ThreadLocalRandom.current().nextLong(properties.getJitterSeconds() + 1);
+        long jitter = randomJitter(properties.getJitterSeconds());
         redisTemplate.opsForValue().set(key, value, Duration.ofSeconds(ttlSeconds + jitter));
         localCache.put(key, value);
+    }
+
+    // ==================== 工具 ====================
+
+    private static long randomJitter(long maxJitter) {
+        return maxJitter <= 0 ? 0 : ThreadLocalRandom.current().nextLong(maxJitter + 1);
     }
 
     private <T> T decode(String value, Class<T> type) {
