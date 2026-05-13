@@ -10,12 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
 
 /**
- * 有事务：事件写入 Outbox（与同事务提交），由 {@link OutboxPublishScheduler} 投递 MQ。
+ * 有事务：事件写入 Outbox，同时注册 afterCommit 回调直接发送 MQ。
+ * 若直接发送失败，由 {@link OutboxPublishScheduler} 轮询兜底投递。
  * 无事务：直接发 MQ（兼容非事务调用方）。
  */
 @Component
@@ -42,6 +44,13 @@ public class RabbitDomainEventPublisher implements DomainEventPublisher {
         }
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             insertOutbox(event);
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            amqpDomainEventSender.send(event);
+                        }
+                    });
             return;
         }
         amqpDomainEventSender.send(event);

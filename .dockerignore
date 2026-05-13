@@ -1,0 +1,9 @@
+target/
+*.md
+.git/
+.gitignore
+.env
+.env.example
+campus-help-web/
+docs/
+.claude/
